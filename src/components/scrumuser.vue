@@ -32,7 +32,7 @@ import {config, Base} from './config';
     data () {
         return {
           scrum_user: {},
-          scrum_user_list_url: 'scrum-user-list/'
+          scrum_user_list_url: 'user-list/'
           fi: '',
           showRegistrar: false,
           menu: false,

@@ -39,7 +39,7 @@
                           <v-select label="Projeto" v-model="project_object" :items="project_list" item-text="name" @blur="blurSelectedProject"></v-select>
                         </v-flex>
                         <v-flex xs12 sm6>
-                          <v-select label="Sprint" v-model="actualItem.sprint_object" :items="sprint_list" item-text="username" @blur="blurSelectedSprint"></v-select>
+                          <v-select label="Sprint" v-model="sprint_object" :items="sprint_list" item-text="code" @blur="blurSelectedSprint"></v-select>
                         </v-flex>
                       </v-layout>
                     </v-container>
@@ -193,7 +193,7 @@ export default {
       project_object: null,
       sprint_list_url: 'sprint-list/',
       project_list_url: 'project-list/',
-      scrum_user_list_url: 'scrum-user-list/',
+      scrum_user_list_url: 'user-list/',
 
       actualItem: {}
     }
@@ -272,15 +272,16 @@ export default {
       this.data_inicio = this.actualItem.started;
       this.data_devida = this.actualItem.due;
       this.isNewTask = false;
-      //this.requestAllProject();
-      //this.requestAllUser();
-      //this.requestAllSprintForProject();
-      this.responsible_object = this.get_responsible_object(this.items);
+      this.responsible_object = this.get_responsible_object();
+      this.project_object = this.get_project_object();
       this.status_object = this.get_status_object();
+
       this.data_inicio = item.started;
       this.data_devida = item.due;
       let l = this.responsible_list.length;
-      //console.log(`List: ${l}`);
+      this.requestSprintsForProject();
+      //console.log(`Sprint: ${this.sprint_object}`);
+
       //console.log(this.responsible_object);
 
     },
@@ -298,12 +299,8 @@ export default {
           if (response.status == 201) {
             this.actualItem.id = this.idFromUrl(response.headers['content-location']);
             this.items.push(this.actualItem);
-            console.log(this.items);
-            console.log(this.cards_to_do());
             this.clearFieldsForm();
             this.actualItem = {};
-            console.log(this.items);
-            console.log(this.cards_to_do());
             this.showCreateOrUpdateItem = false;
           }
         })
@@ -346,8 +343,7 @@ export default {
     },
     blurSelectedProject() {
       this.actualItem.project = axios.defaults.baseURL + this.project_list_url  + this.project_object.id + '/';
-      this.requestAllSprintForProject();
-
+      this.requestSprintsForProject();
     },
     blurSelectedStatusTask() {
       this.status = this.status_object.id;
@@ -369,33 +365,61 @@ export default {
             this.responsible_list = response.data;
         }).catch(error => { console.log(error); });
     },
-    requestAllSprintForProject() {
-      return [];
+    requestSprintsForProject() {
+      let id = null;
+      if (this.project_object)
+        id = project_object.id;
+      if ( id == null)
+        id = this.idFromUrl(this.actualItem.project);
+      if (id == null)
+        return [];
+
+      let iri = this.sprint_list_url + 'filter/project/eq/' + id + '/';
+
+      axios.get(iri).then(response => {
+          this.sprint_list = response.data;
+          this.sprint_object = this.get_sprint_object();
+      }).catch(error => { console.log(error); });
     },
-    get_responsible_object()  {
-        let genericItem = null;
-        if (this.actualItem.responsible == null)
-          return null;
-        let newid = this.idFromUrl(this.actualItem.responsible);
-        console.log(`Newid: ${newid}`);
-        this.responsible_list.forEach(function(anItem) {
-            if (anItem.id == newid) {
-                genericItem = anItem;
-                return genericItem;
-            }
-        });
-        return genericItem;
-      },
-    get_status_object() {
+    requestProjects() {
+      axios.get(this.project_list_url).then(response => {
+          this.project_list = response.data;
+      }).catch(error => { console.log(error); });
+    },
+    get_generic_item_object(item, item_list){
       let genericItem = null;
-      let newid = this.actualItem.status;
-      this.status_task_list.forEach(function(anItem) {
+      if (item == null)
+        return null;
+      let newid = this.idFromUrl(item);
+      item_list.forEach(function(anItem) {
           if (anItem.id == newid) {
               genericItem = anItem;
               return genericItem;
           }
       });
       return genericItem;
+
+    },
+    get_responsible_object()  {
+        return this.get_generic_item_object(this.actualItem.responsible, this.responsible_list);
+    },
+    get_sprint_object()  {
+
+        return this.get_generic_item_object(this.actualItem.sprint, this.sprint_list);
+    },
+    get_project_object()  {
+          return this.get_generic_item_object(this.actualItem.project, this.project_list);
+    },
+    get_status_object() {
+        let genericItem = null;
+        let newid = this.actualItem.status;
+        this.status_task_list.forEach(function(anItem) {
+            if (anItem.id == newid) {
+                genericItem = anItem;
+                return genericItem;
+            }
+        });
+        return genericItem;
     },
 
     cards_to_do() {
@@ -423,6 +447,7 @@ export default {
         });
         this.requestAllUser();
         this.requestTaskDominioList();
+        this.requestProjects();
     }
 }
 

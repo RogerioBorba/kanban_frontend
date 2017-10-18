@@ -58,7 +58,7 @@ export default {
   data () {
       return {
         url: 'continuous-activity-list/',
-        scrum_user_list_url: 'scrum-user-list/',
+        scrum_user_list_url: 'user-list/',
         items: [],
         menu_start: null,
         menu_end: null,

@@ -1,162 +1,226 @@
 <template>
+<v-app>
   <v-layout row>
     <v-flex xs12 sm6 offset-sm3>
       <v-card>
-        <v-toolbar class="white--text indigo" dark>
-          <v-btn icon @click="insertSprint">
-             <v-icon>add</v-icon>
+        <v-toolbar class="indigo text--lighten-2" dark>
+          <v-btn icon @click="plusClicked">
+             <v-icon >add</v-icon>
           </v-btn>
-          <v-btn icon>
-             <v-icon>search</v-icon>
-          </v-btn>
-          <v-btn icon>
-            <v-icon>more_vert</v-icon>
-          </v-btn>
+          <v-spacer></v-spacer>
+          <v-text-field label="Pesquisar..."  single-line  append-icon="search"  dark ></v-text-field>
         </v-toolbar>
-          <form v-if="isInserOrUpdatetSprint">
-              <v-text-field  label="Nome" v-model="name" :rules="nameRules" :counter="100"  required ></v-text-field>
-              <v-divider class="grey lighten-1"></v-divider>
-              <v-text-field  label="Descrição" v-model="description"></v-text-field>
-              <v-divider class="grey lighten-1"></v-divider>
-              <v-text-field  label="Data início" v-model="start"></v-text-field>
-              <v-divider class="grey lighten-1"></v-divider>
-              <v-text-field  label="Data fim" v-model="end"></v-text-field>
-              <v-divider class="grey lighten-1"></v-divider>
-              <v-btn @click="submit">submit</v-btn>
-              <v-btn @click="clear">Cancel</v-btn>
-          </form>
-        <v-list two-line>
-          <template v-for="item in items" >
-            <v-divider class="grey lighten-1"></v-divider>
-            <v-list-tile v-bind:key="item.title" @click="">
-                <v-btn icon @click="removeSprint(item)">
-                 <v-icon>delete</v-icon>
-              </v-btn>
-              <v-btn icon @click="editSprint(item)">
-                 <v-icon>edit</v-icon>
-              </v-btn>
+        <form  v-show="showCreateOrUpdateItem">
+          <v-text-field  label="Código" v-model="actualItem.code" ></v-text-field>
+          <v-select label="Responsável" v-model="responsible_object" :items="responsible_list" item-text="name" @blur="blurSelectedResponsible" required></v-select>
+          <v-select label="Projeto" v-model="project_object" :items="project_list" item-text="name" @blur="blurSelectedProject" required></v-select>
+          <v-menu lazy  :close-on-content-click="true"  v-model="menu_start"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
+            <v-text-field slot="activator" label="Data incial" v-model="data_start" prepend-icon="event" readonly ></v-text-field>
+            <v-date-picker v-model="data_start" no-title scrollable actions></v-date-picker>
+          </v-menu>
+          <v-menu lazy  :close-on-content-click="true"  v-model="menu_end"  transition="scale-transition" offset-y full-width  :nudge-left="40" max-width="290px">
+            <v-text-field slot="activator" label="Data final" v-model="data_end" prepend-icon="event" readonly ></v-text-field>
+            <v-date-picker v-model="data_end" no-title scrollable actions></v-date-picker>
+          </v-menu>
+           <v-btn round color="primary" @click="updateOrCreateItem">Confirmar</v-btn>
+           <v-btn round color="primary" @click="cancel">Cancelar</v-btn>
+       </form>
+        <v-list >
+            <v-list-tile v-for="(item, index) in items" :key="index" avatar @click="">
+              <v-list-tile-action>
+                <v-btn  purple lighten-4 icon @click.native="editItem(item)" >
+                   <v-icon dark> edit </v-icon>
+                </v-btn>
+              </v-list-tile-action>
+              <v-list-tile-action>
+                <v-btn  purple lighten-4 icon @click.native="removeItem(item);">
+                   <v-icon dark> delete </v-icon>
+                </v-btn>
+              </v-list-tile-action>
               <v-list-tile-content>
-                <v-list-tile-title v-text="item.name"></v-list-tile-title>
-                <v-list-tile-sub-title v-text="item.description"></v-list-tile-sub-title>
+                <v-list-tile-title v-text="item.code" ></v-list-tile-title>
+                  </v-list-tile-content>
               </v-list-tile-content>
             </v-list-tile>
-          </template>
         </v-list>
       </v-card>
     </v-flex>
   </v-layout>
+</v-app>
 </template>
 <script>
 import axios from 'axios';
+import {config} from './config';
+
 export default {
-  name: 'sprint',
-  data() {
-    return {
-      name: '',
-      description: '',
-      start: null,
-      end: null,
-      items: [],
-      actualItem: {},
-      nameRules: [
-          (v) => !!v || 'Nome é obrigatório',
-          (v) => v && v.length <= 100 || 'Nome deve ter até 100 characters'
-        ],
-      isInserOrUpdatetSprint: false,
-    }
-  },
-  methods: {
-    insertSprint() {
-      this.isInserOrUpdatetSprint = true;
-      actualItem: {};
+  name: 'Sprint',
+  data () {
+      return {
+        url: 'sprint-list/',
+        scrum_user_list_url: 'user-list/',
+        project_list_url: 'project-list/',
+        items: [],
+        menu_start: null,
+        menu_end: null,
+        data_start: null,
+        data_end: null,
+        responsible_list: [],
+        responsible_object: {},
+        project_list: [],
+        project_object: {},
+        actualItem: {},
+        showCreateOrUpdateItem: false
+      }
     },
-    editSprint(an_item) {
-      this.isInserOrUpdatetSprint = true;
-      this.name = an_item.name;
-      this.description= an_item.description;
-      this.start= an_item.start;
-      this.end= an_item.end;
-      this.actualItem = an_item;
-    },
-    removeSprint(item) {
-      let index = this.items.indexOf(item);
-      axios.delete(this.url + item.id + '/').then( response => {
-            if (response.status == 204) {
-                console.log(response.status);
-                if (index > -1) {
-                  this.items.splice(index, 1);
-                }
-            }
-      }).catch(error => {
-          console.log(error);
-      });
-    },
-    clearFields() {
-      this.name = '',
-      this.description= '',
-      this.start= null,
-      this.end= null
-    },
-    clear() {
-      this.clearFields();
-      this.isInserOrUpdatetSprint = false;
-    },
-    idFromUrl(an_url) {
-        return parseInt(an_url.split('/').reverse()[0]);
+    methods: {
+      blurSelectedResponsible() {
+        this.actualItem.responsible = axios.defaults.baseURL + this.scrum_user_list_url  + this.responsible_object.id + '/';
       },
 
-    submitPost() {
-      this.actualItem = {};
-      this.actualItem.id = null;
-      this.actualItem.name = this.name;
-      this.actualItem.description = this.description;
-      this.actualItem.start = this.start;
-      this.actualItem.end = this.end;
-      axios.post(this.url, this.actualItem).then( response => {
+      blurSelectedProject() {
+        this.actualItem.project = axios.defaults.baseURL + this.project_list_url  + this.project_object.id + '/';
+        console.log(this.actualItem.project);
+      },
+
+      lastCharIsSlash(an_url) {
+        if (an_url != null )
+          return an_url.slice(-1) == '/';
+        return false;
+      },
+      idFromUrl(an_url) {
+        if (an_url == null)
+          return -1;
+        //console.log(an_url.slice(-1) == '/');
+        let i =  this.lastCharIsSlash(an_url) ? 1:0;
+        return parseInt(an_url.split('/').reverse()[i]);
+      },
+
+      plusClicked() {
+        this.showCreateOrUpdateItem = true;
+        this.actualItem = {};
+
+      },
+      cancel() {
+        this.showCreateOrUpdateItem = false;
+        this.actualItem = {};
+      },
+      updateOrCreateItem() {
+        this.actualItem.start = this.data_start;
+        this.actualItem.end = this.data_end;
+        if (this.actualItem.id != null)
+          this.updateItem();
+        else
+          this.createItem();
+     },
+
+     createItem() {
+        axios.post(this.url, this.actualItem).then( response => {
             if (response.status == 201) {
-              console.log("resp: " + response.headers['content-location']);
-              this.actualItem.id= this.idFromUrl(response.headers['content-location']);
+              this.actualItem.id = this.idFromUrl(response.headers['content-location']);
               this.items.push(this.actualItem);
-              this.clearFields();
+              this.clearFormFields();
+              this.actualItem = {};
+              this.showCreateOrUpdateItem = false;
+              this.clearFormFields();
             }
-      }).catch(error => {
+            console.log(response.status);
+          })
+        .catch(error => {
           console.log(error);
-      });
+        });
+      },
+      clearFormFields() {
+        this.menu_start = null;
+        this.menu_end = null;
+        this.data_start = null;
+        this.data_end = null;
+        this.responsible_object = {};
+      },
 
-    },
-    submitPut() {
-      this.actualItem.name = this.name;
-      this.actualItem.description = this.description;
-      this.actualItem.start = this.start;
-      this.actualItem.end = this.end;
-      axios.put(this.url + this.actualItem.id + '/', this.actualItem).then( response => {
+      updateItem() {
+        console.log(this.actualItem);
+        axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
             if (response.status == 204)
-                this.clearFields();
-      }).catch(error => {
-          console.log(error);
-      });
-
-    },
-    submit() {
-      if (this.actualItem.id == null)
-          return this.submitPost();
-      this.submitPut();
-    }
-  },
-  created: function () {
-        axios.defaults.baseURL = 'http://localhost:8000/kanban/';
-        axios.defaults.headers.common['Accept'] = 'application/json';
-        axios.defaults.headers.post['Content-Type'] = 'application/json';
-        this.url = "sprints/";
-        axios.get(this.url).then(response => {
-                this.items = response.data;
+                this.clearFormFields();
+            console.log(response.status);
+            this.showCreateOrUpdateItem = false;
 
         })
         .catch(error => {
           console.log(error);
         });
-      }
+      },
+      get_responsible_object()  {
+          return this.get_generic_item_object(this.actualItem.responsible, this.responsible_list)
+
+      },
+      get_project_object()  {
+          return this.get_generic_item_object(this.actualItem.project, this.project_list)
+      },
+      get_generic_item_object(item, item_list) {
+        let genericItem = null;
+        if (item == null)
+          return null;
+        let newid = this.idFromUrl(item);
+        console.log(`Newid: ${newid}`);
+        item_list.forEach(function(anItem) {
+            if (anItem.id == newid) {
+                genericItem = anItem;
+                return genericItem;
+            }
+        });
+        return genericItem;
+      },
+      editItem(item) {
+          this.actualItem = item;
+          this.showCreateOrUpdateItem = true;
+          this.data_start = this.actualItem.start;
+          this.data_end = this.actualItem.end;
+          console.log(this.get_responsible_object());
+          this.responsible_object =  this.get_responsible_object();
+          console.log(this.get_project_object());
+          this.project_object = this.get_project_object();
+
+      },
+      removeItem(item) {
+        let index = this.items.indexOf(item);
+        axios.delete(this.url + item.id + "/").then( response => {
+
+        })
+        .catch(error => {
+          console.log(error);
+        });
+        if (index > -1) {
+          this.items.splice(index, 1);
+        }
+      },
+      requestAllUser() {
+          //console.log(this.scrum_user_list_url);
+          axios.get(this.scrum_user_list_url).then(response => {
+              this.responsible_list = response.data;
+          }).catch(error => { console.log(error); });
+      },
+      requestProjects() {
+          //console.log(this.scrum_user_list_url);
+          axios.get(this.project_list_url).then(response => {
+              this.project_list = response.data;
+          }).catch(error => { console.log(error); });
+      },
+
+    },
+    created: function () {
+      axios.get(this.url).then(response => {
+              this.items = response.data;
+
+      })
+      .catch(error => {
+        console.log(error);
+      });
+      this.requestAllUser();
+      this.requestProjects();
+    }
 }
 </script>
-<style>
+<style scoped>
+color: black
 </style>

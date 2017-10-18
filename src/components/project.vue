@@ -23,8 +23,8 @@
             <v-text-field slot="activator" label="Data final" v-model="data_end" prepend-icon="event" readonly ></v-text-field>
             <v-date-picker v-model="data_end" no-title scrollable actions></v-date-picker>
           </v-menu>
-           <v-btn @click="updateOrCreateItem">Confirmar</v-btn>
-           <v-btn @click="cancel">Cancelar</v-btn>
+           <v-btn round color="primary" @click="updateOrCreateItem">Confirmar</v-btn>
+           <v-btn round color="primary" @click="cancel">Cancelar</v-btn>
        </form>
         <v-list >
             <v-list-tile v-for="(item, index) in items" :key="index" avatar @click="">
@@ -58,7 +58,7 @@ export default {
   data () {
       return {
         url: 'project-list/',
-        scrum_user_list_url: 'scrum-user-list/',
+        scrum_user_list_url: 'user-list/',
         items: [],
         menu_start: null,
         menu_end: null,

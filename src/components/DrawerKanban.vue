@@ -15,6 +15,8 @@
     <v-toolbar class="indigo darken-4" fixed dark app>
       <v-toolbar-side-icon @click.stop="drawer = !drawer"></v-toolbar-side-icon>
       <v-spacer></v-spacer>
+      <v-toolbar-title v-if="does_not_has_token"><p class="red--text"> Registre-se ou faça o login para utilizar este app </p> </v-toolbar-title>
+      <v-spacer></v-spacer>
       <v-menu :nudge-width="100">
           <v-toolbar-title slot="activator">
             <v-btn icon>
@@ -32,11 +34,14 @@
       <v-container fluid>
         <!--v-router-->
         <template>
-            <div>
+            <div v-if="!showLoginOrRegister">
               <keep-alive>
-                <component :is="dynamicComponent"></component>
+                <component :is="dynamicComponent" v-if="!does_not_has_token"></component>
               </keep-alive>
             </div>
+            <template v-if="does_not_has_token">
+              <login-form :showRegister="showRegister" v-on:loginOrRegister="loginOrRegister" v-on:loginOrRegisterError="loginOrRegisterError"></login-form>
+            </template>
         </template>
       </v-container>
     </main>
@@ -51,13 +56,17 @@ import Home from './home';
 import Task from './task';
 import Project from './project';
 import ContinuousActivity from './continuousActivity';
+import Sprint from './sprint';
+import LoginForm from './LoginForm';
 
   export default {
     components: {
       'home': Home,
       'tarefa': Task,
       'projeto': Project,
-      'atividade-continua': ContinuousActivity
+      'atividade-continua': ContinuousActivity,
+      'sprint': Sprint,
+      'login-form': LoginForm
     },
     data () {
       return {
@@ -66,59 +75,78 @@ import ContinuousActivity from './continuousActivity';
         actualItem: null,
         items: [],
         user_actions: [],
-        showLogin: false,
-        showLoginOrRegistrar: false,
-        actualComponent: null
+        showRegister: false,
+        showLoginOrRegister: false,
+        actualComponent: null,
+        does_not_has_token: true
+
       }
     },
     computed: {
       dynamicComponent() {
         return this.actualComponent;
-      }
+      },
+
     },
     methods: {
 
+      set_does_not_has_token() {
+        this.does_not_has_token =  config.localstore == null || config.localstore.get('token', '') == '';
+      },
       selectedItem(an_item) {
         if (config.localstore.get('token') == null)
-          return console.log('É preciso estar logado');
+          //return console.log('É preciso estar logado');
         this.actualItem = an_item;
         this.actualComponent = an_item.component
+      },
+      cancelLogin() {
+        //console.log('cancelar login');
+        this.showLoginOrRegister = false;
       },
       selectedAction(actionToExecute) {
          return actionToExecute();
       },
       login() {
-        this.showLogin = true;
-        this.items.forEach(anItem=>{ anItem.show = false;});
+
+        this.showRegister = false;
+        //this.showLoginOrRegister = false;
+        this.showLoginOrRegister = true;
+        //console.log(this.showRegister);
+        //this.items.forEach(anItem=>{ anItem.show = false;});
       },
       logout() {
-        this.cancelLoginClicked();
-      },
-      registrar() {
-          alert('registrar');
-      },
-      cancelLoginClicked() {
-        config.localstore.remove('token');
+        this.showRegister = false;
+        this.showLoginOrRegister = true;
+        config.localstore.set('token', '');
+        this.set_does_not_has_token() ;
         this.actualItem = this.items[0];
-        this.showSelectedItem();
-        this.showLoginOrRegistrar = true;
       },
-      loginOrRegisterClicked(status) {
-        //console.log(status);
-        this.showLoginOrRegistrar = true;
-        if (config.localstore.get('token') != null) {
-          this.showLoginOrRegistrar = false;
-          this.actualItem =this.items[0];
-          this.showSelectedItem();
+      register() {
+          //console.log(this.showRegister);
+          //this.showLoginOrRegister = false;
+          this.showLoginOrRegister = true;
+          this.showRegister = true;
+      },
+
+      loginOrRegister(value) {
+        if(value instanceof Error);
+          console.log(value);
+        if (value == 201) {
+          this.set_does_not_has_token();
+          this.showLoginOrRegister = false;
+          this.actualItem = this.items[0];
         }
+      },
+      loginOrRegisterError(error) {
+        console.log(error.name + ' - ' + error.message);
       }
     },
     created: function () {
-      this.items = [ { title: 'Gestão de atividades', icon: 'home', show: true, component: 'home' }, { title: 'Projetos', icon: 'format_list_numbered', show: false , component: 'projeto'},
-                     { title: 'Tarefas', icon: 'list', show: false, component: 'tarefa' }, { title: 'Sprints', icon: 'motorcycle', show: false , component: 'home'}, { title: 'Atividades contínuas', icon: 'assignment', show: false, component: 'atividade-continua' } ];
+      this.items = [ { title: 'Gestão de atividades', icon: 'home',  component: 'home' }, { title: 'Projetos', icon: 'format_list_numbered',  component: 'projeto'},
+                     { title: 'Tarefas', icon: 'list',  component: 'tarefa' }, { title: 'Sprints', icon: 'motorcycle',  component: 'sprint'}, { title: 'Atividades contínuas', icon: 'assignment',  component: 'atividade-continua'} ];
       this.actualItem = this.items[0];
       this.actualComponent = 'home';
-      this.user_actions = [{title: 'Login', action: this.login}, {title: 'Logout', action: this.logout}, { title: 'Registrar', action: this.registrar} ]
+      this.user_actions = [{title: 'Login', action: this.login}, {title: 'Logout', action: this.logout}, { title: 'Registrar', action: this.register} ]
     }
   }
 </script>
