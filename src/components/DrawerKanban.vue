@@ -58,6 +58,7 @@ import Project from './project';
 import ContinuousActivity from './continuousActivity';
 import Sprint from './sprint';
 import LoginForm from './LoginForm';
+import axios from 'axios';
 
   export default {
     components: {
@@ -118,6 +119,7 @@ import LoginForm from './LoginForm';
         this.showRegister = false;
         this.showLoginOrRegister = true;
         config.localstore.set('token', '');
+        axios.defaults.headers.common['Authorization'] = null;
         this.set_does_not_has_token() ;
         this.actualItem = this.items[0];
       },
@@ -129,7 +131,7 @@ import LoginForm from './LoginForm';
       },
 
       loginOrRegister(value) {
-        if(value instanceof Error);
+        if(value instanceof Error)
           console.log(value);
         if (value == 201) {
           this.set_does_not_has_token();

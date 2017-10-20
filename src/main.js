@@ -16,7 +16,7 @@ Vue.use(Vuetify);
 Vue.use(VueLocalStorage);
 //Vue.localStorage.set('token', null);
 config.localstore = Vue.localStorage;
-
+axios.defaults.headers.common['Authorization'] = `Bearer ${config.localstore.get('token','')}`;
 Vue.config.productionTip = false;
 Vue.use(Vuetify);
 Vue.use(VueRouter);

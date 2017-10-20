@@ -3,7 +3,7 @@
       <v-parallax src="../static/vbanner.jpg">
         <v-layout column align-center justify-center>
           <h1 class="white--text"></h1>
-          <h4 class="white--text">Visualize seus projetos, tarefas etc!</h4>
+          <h4 class="white--text">Visualize seus projetos, tarefas etc!<br><h6> Versão 1.0 </h6></h4>
           <h6 class="red--text" v-if="false"> Registre-se ou faça o login para utilizar este app </h6>
         </v-layout>
       </v-parallax>

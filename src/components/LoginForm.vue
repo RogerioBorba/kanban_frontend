@@ -102,10 +102,11 @@ import {config, Base} from './config';
               if (response.status == 201) {
                 this.user.id = this.idFromUrl(response.headers['content-location']);
                 config.localstore.set('token', response.headers['x-access-token']);
+                axios.defaults.headers.common['Authorization'] = `Bearer ${config.localstore.get('token','')}`;
 
               }
               this.$emit('loginOrRegister', response.status);
-              console.log(response.status);
+              
           })
           .catch(error => {
             this.title= 'Login incorreto ou senha incorreta';
