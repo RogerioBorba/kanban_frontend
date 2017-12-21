@@ -1,18 +1,18 @@
 <template>
   <div id="app">
-    <app-kanban></app-kanban>
+    <app-root></app-root>
   </div>
 </template>
 
 <script>
-import Kanban from './components/DrawerKanban'
+import RootView from './components/root'
 
 export default {
   name: 'kanbanpanel',
   components: {
-    'app-kanban': Kanban
+    'app-root': RootView
   },
-  data() {
+  data () {
     return {}
   }
 }

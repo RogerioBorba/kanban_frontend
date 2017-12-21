@@ -1,14 +1,13 @@
 <template>
-<v-app>
-  <v-layout row>
-    <v-flex xs12 sm6 offset-sm3>
+  <v-layout>
+    <v-flex xs12 sm10 offset-sm1>
       <v-card>
-        <v-toolbar class="indigo text--lighten-2" dark>
-          <v-btn icon @click="plusClicked">
-             <v-icon >add</v-icon>
+        <v-toolbar class="blue-grey darken-3" dark>
+          <v-btn icon color="blue darken-2" @click="plusClicked">
+             <v-icon color="white">add</v-icon>
           </v-btn>
           <v-spacer></v-spacer>
-          <v-text-field label="Pesquisar..."  single-line  append-icon="search"  dark ></v-text-field>
+          <v-text-field label="Pesquisar projeto..."  class="blue--text mt-3" single-line  append-icon="search"  dark ></v-text-field>
         </v-toolbar>
         <form  v-show="showCreateOrUpdateItem">
           <v-text-field  label="Nome" v-model="actualItem.name" ></v-text-field>
@@ -30,12 +29,12 @@
             <v-list-tile v-for="(item, index) in items" :key="index" avatar @click="">
               <v-list-tile-action>
                 <v-btn  purple lighten-4 icon @click.native="editItem(item)" >
-                   <v-icon dark> edit </v-icon>
+                   <v-icon dark color="yellow lighten-3">edit</v-icon>
                 </v-btn>
               </v-list-tile-action>
               <v-list-tile-action>
                 <v-btn  purple lighten-4 icon @click.native="removeItem(item);">
-                   <v-icon dark> delete </v-icon>
+                   <v-icon dark color="red lighten-2">delete</v-icon>
                 </v-btn>
               </v-list-tile-action>
               <v-list-tile-content>
@@ -47,167 +46,153 @@
       </v-card>
     </v-flex>
   </v-layout>
-</v-app>
+
 </template>
 <script>
-import axios from 'axios';
-import {config} from './config';
+import axios from 'axios'
 
 export default {
   name: 'Project',
   data () {
-      return {
-        url: 'project-list/',
-        scrum_user_list_url: 'user-list/',
-        items: [],
-        menu_start: null,
-        menu_end: null,
-        data_start: null,
-        data_end: null,
-        responsible_list: [],
-        technical_responsible_object: {},
-        administrative_responsible_object: {},
-        actualItem: {},
-        showCreateOrUpdateItem: false
+    return {
+      url: 'project-list/',
+      scrum_user_list_url: 'user-list/',
+      items: [],
+      menu_start: null,
+      menu_end: null,
+      data_start: null,
+      data_end: null,
+      responsible_list: [],
+      technical_responsible_object: {},
+      administrative_responsible_object: {},
+      actualItem: {},
+      showCreateOrUpdateItem: false
+    }
+  },
+  methods: {
+    blurSelectedTechnicalResponsible () {
+      this.actualItem.technical_responsible = axios.defaults.baseURL + this.scrum_user_list_url + this.technical_responsible_object.id + '/'
+    },
+    blurSelectedAdministrativeResponsible () {
+      this.actualItem.administrative_responsible = axios.defaults.baseURL + this.scrum_user_list_url + this.administrative_responsible_object.id + '/'
+    },
+    lastCharIsSlash (anUrl) {
+      if (anUrl != null) {
+        return anUrl.slice(-1) === '/'
+      }
+      return false
+    },
+    idFromUrl (anUrl) {
+      if (anUrl === null) {
+        return -1
+      }
+      // console.log(anUrl.slice(-1) === '/')
+      let i = this.lastCharIsSlash(anUrl) ? 1 : 0
+      return parseInt(anUrl.split('/').reverse()[i])
+    },
+    plusClicked () {
+      this.showCreateOrUpdateItem = true
+      this.actualItem = {}
+    },
+    cancel () {
+      this.showCreateOrUpdateItem = false
+      this.actualItem = {}
+    },
+    updateOrCreateItem () {
+      this.actualItem.start = this.data_start
+      this.actualItem.end = this.data_end
+      if (this.actualItem.id != null) {
+        this.updateItem()
+      } else {
+        this.createItem()
       }
     },
-    methods: {
-      blurSelectedTechnicalResponsible() {
-        this.actualItem.technical_responsible = axios.defaults.baseURL + this.scrum_user_list_url  + this.technical_responsible_object.id + '/';
-
-      },
-      blurSelectedAdministrativeResponsible() {
-        this.actualItem.administrative_responsible = axios.defaults.baseURL + this.scrum_user_list_url  + this.administrative_responsible_object.id + '/';
-      },
-      lastCharIsSlash(an_url) {
-        if (an_url != null )
-          return an_url.slice(-1) == '/';
-        return false;
-      },
-      idFromUrl(an_url) {
-        if (an_url == null)
-          return -1;
-        //console.log(an_url.slice(-1) == '/');
-        let i =  this.lastCharIsSlash(an_url) ? 1:0;
-        return parseInt(an_url.split('/').reverse()[i]);
-      },
-
-      plusClicked() {
-        this.showCreateOrUpdateItem = true;
-        this.actualItem = {};
-
-      },
-      cancel() {
-        this.showCreateOrUpdateItem = false;
-        this.actualItem = {};
-      },
-      updateOrCreateItem() {
-        this.actualItem.start = this.data_start;
-        this.actualItem.end = this.data_end;
-        if (this.actualItem.id != null)
-          this.updateItem();
-        else
-          this.createItem();
-     },
-
-     createItem() {
-        axios.post(this.url, this.actualItem).then( response => {
-            if (response.status == 201) {
-              this.actualItem.id = this.idFromUrl(response.headers['content-location']);
-              this.items.push(this.actualItem);
-              this.clearFormFields();
-              this.actualItem = {};
-              this.showCreateOrUpdateItem = false;
-              this.clearFormFields();
-            }
-            console.log(response.status);
-          })
-        .catch(error => {
-          console.log(error);
-        });
-      },
-      clearFormFields() {
-        this.menu_start = null;
-        this.menu_end = null;
-        this.data_start = null;
-        this.data_end = null;
-        this.technical_responsible_object = {};
-        this.administrative_responsible_object = {};
-      },
-
-      updateItem() {
-        console.log(this.actualItem);
-        axios.put(this.url + this.actualItem.id + "/", this.actualItem).then( response => {
-            if (response.status == 204)
-                this.clearFormFields();
-            console.log(response.status);
-            this.showCreateOrUpdateItem = false;
-
-        })
-        .catch(error => {
-          console.log(error);
-        });
-      },
-      get_technical_responsible_object()  {
-          let genericItemList = [];
-          console.log(this.actualItem.technical_responsible);
-          if (this.actualItem.technical_responsible == null)
-            return null;
-          let newid = this.idFromUrl(this.actualItem.technical_responsible);
-          genericItemList = this.responsible_list.filter(anItem=>anItem.id == newid);
-          if (genericItemList.length == 0)
-            return null;
-
-          return genericItemList[0];
-      },
-      get_administrative_responsible_object()  {
-          let genericItemList = [];
-          if (this.actualItem.administrative_responsible == null)
-            return null;
-          let newid = this.idFromUrl(this.actualItem.administrative_responsible);
-          genericItemList = this.responsible_list.filter(anItem=>anItem.id == newid);
-          if (genericItemList.length == 0)
-            return null
-          return genericItemList[0];
-      },
-      editItem(item) {
-          this.actualItem = item;
-          this.showCreateOrUpdateItem = true;
-          this.data_start = this.actualItem.start;
-          this.data_end = this.actualItem.end;
-          this.technical_responsible_object =  this.get_technical_responsible_object();
-          this.administrative_responsible_object =  this.get_administrative_responsible_object();
-      },
-      removeItem(item) {
-        let index = this.items.indexOf(item);
-        axios.delete(this.url + item.id + "/").then( response => {
-
-        })
-        .catch(error => {
-          console.log(error);
-        });
-        if (index > -1) {
-          this.items.splice(index, 1);
+    createItem () {
+      axios.post(this.url, this.actualItem).then(response => {
+        if (response.status === 201) {
+          this.actualItem.id = this.idFromUrl(response.headers['content-location'])
+          this.items.push(this.actualItem)
+          this.clearFormFields()
+          this.actualItem = {}
+          this.showCreateOrUpdateItem = false
+          this.clearFormFields()
         }
-      },
-      requestAllUser() {
-          //console.log(this.scrum_user_list_url);
-          axios.get(this.scrum_user_list_url).then(response => {
-              this.responsible_list = response.data;
-          }).catch(error => { console.log(error); });
-      },
-
-    },
-    created: function () {
-      axios.get(this.url).then(response => {
-              this.items = response.data;
-
+        console.log(response.status)
       })
-      .catch(error => {
-        console.log(error);
-      });
-      this.requestAllUser();
+      .catch(error => console.log(error))
+    },
+    clearFormFields () {
+      this.menu_start = null
+      this.menu_end = null
+      this.data_start = null
+      this.data_end = null
+      this.technical_responsible_object = {}
+      this.administrative_responsible_object = {}
+    },
+    updateItem () {
+      console.log(this.actualItem)
+      axios.put(this.url + this.actualItem.id + '/', this.actualItem).then(response => {
+        if (response.status === 204) {
+          this.clearFormFields()
+        }
+        console.log(response.status)
+        this.showCreateOrUpdateItem = false
+      })
+      .catch(error => console.log(error))
+    },
+    get_technical_responsible_object () {
+      let genericItemList = []
+      console.log(this.actualItem.technical_responsible)
+      if (this.actualItem.technical_responsible === null) {
+        return null
+      }
+      let newid = this.idFromUrl(this.actualItem.technical_responsible)
+      genericItemList = this.responsible_list.filter(anItem => anItem.id === newid)
+      if (genericItemList.length === 0) {
+        return null
+      }
+      return genericItemList[0]
+    },
+    get_administrative_responsible_object () {
+      let genericItemList = []
+      if (this.actualItem.administrative_responsible === null) {
+        return null
+      }
+      let newid = this.idFromUrl(this.actualItem.administrative_responsible)
+      genericItemList = this.responsible_list.filter(anItem => anItem.id === newid)
+      if (genericItemList.length === 0) {
+        return null
+      }
+      return genericItemList[0]
+    },
+    editItem (item) {
+      this.actualItem = item
+      this.showCreateOrUpdateItem = true
+      this.data_start = this.actualItem.start
+      this.data_end = this.actualItem.end
+      this.technical_responsible_object = this.get_technical_responsible_object()
+      this.administrative_responsible_object = this.get_administrative_responsible_object()
+    },
+    removeItem (item) {
+      let index = this.items.indexOf(item)
+      axios.delete(this.url + item.id + '/').then(response => console.log(response))
+      .catch(error => console.log(error))
+      if (index > -1) {
+        this.items.splice(index, 1)
+      }
+    },
+    requestAllUser () {
+      // console.log(this.scrum_user_list_url)
+      axios.get(this.scrum_user_list_url).then(response => {
+        this.responsible_list = response.data
+      }).catch(error => console.log(error))
     }
+  },
+  created: function () {
+    axios.get(this.url).then(response => (this.items = response.data))
+    .catch(error => console.log(error))
+    this.requestAllUser()
+  }
 }
 </script>
 <style scoped>

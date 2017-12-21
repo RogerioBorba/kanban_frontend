@@ -1,33 +1,28 @@
 <template>
-  <v-app>
-      <v-parallax src="../static/vbanner.jpg">
-        <v-layout column align-center justify-center>
-          <h1 class="white--text"></h1>
-          <h4 class="white--text">Visualize seus projetos, tarefas etc!<br><h6> Versão 1.0 </h6></h4>
-          <h6 class="red--text" v-if="false"> Registre-se ou faça o login para utilizar este app </h6>
-        </v-layout>
-      </v-parallax>
-  </v-app>
+  <v-parallax class="background" src="../static/kanban_background.png">
+    <v-layout column align-center justify-center>
+      <h1 class="white--text"></h1>
+      <h4 class="black--text">Visualize e planeje seus projetos, tarefas, atividades etc! <br><h6 class="text-xs-right"> Versão 1.0  </h6></h4>
+    </v-layout>
+  </v-parallax>
 </template>
+
 <script>
-import {config} from './config';
+
 export default {
-  name: 'Home',
-  props: ['showMessage'],
-  methods: {
-    user_does_not_has_token() {
-      let does_not_has_token = config.localstore == null || config.localstore.get('token', '') == '';
-      console.log(config.localstore);
-      console.log('user_does_not_has__token()');
-      console.log(does_not_has_token);
-      console.log('config.localstore.get(token)');
-      console.log(config.localstore.get('token'));
-      return does_not_has_token;
-    },
+  data () {
+    return {
 
-  },
-  watcher: {
-
+    }
   }
 }
 </script>
+
+<!-- Add "scoped" attribute to limit CSS to this component only -->
+<style scoped>
+  .background {
+    position: absolute;
+    min-height: 100%;
+    min-width: 100%;
+  }
+</style>
