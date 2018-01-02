@@ -8,7 +8,7 @@ import axios from 'axios'
 import VueLocalStorage from 'vue-localstorage'
 import {config, store} from './components/config'
 import('../node_modules/vuetify/dist/vuetify.min.css') // Ensure you are using css-loader
-axios.defaults.baseURL = 'http://127.0.0.1:8000/scrum-list/'
+axios.defaults.baseURL = 'http://172.30.10.86/scrum-list/'
 axios.defaults.headers.common['Accept'] = 'application/json'
 axios.defaults.headers.post['Content-Type'] = 'application/json'
 

@@ -124,10 +124,10 @@ export default {
     this.item_components = [
       {title: 'Gestão de atividades', icon: 'home', color: 'white', component_name: 'home', enabled: this.$store.getters.has_token},
       {title: 'Projetos', icon: 'format_list_numbered', color: 'blue', component_name: 'projeto', enabled: this.$store.getters.has_token},
-      {title: 'Tipo atividade contínua/extra etc', color: 'orange', icon: 'assignment', component_name: 'tipo_atividade_continua_extra', enabled: this.$store.getters.has_token},
       {title: 'Tarefas', icon: 'list', color: 'green', component_name: 'tarefas', enabled: this.$store.getters.has_token},
       {title: 'Sprints', icon: 'motorcycle', color: 'yellow', component_name: 'sprint', enabled: this.$store.getters.has_token},
-      {title: 'Minhas atividades contínuas/extras etc', color: 'orange', icon: 'assignment', component_name: 'atividade_continua_extra', enabled: this.$store.getters.has_token}
+      {title: 'Tipo atividade contínua/extra etc', color: 'orange', icon: 'assignment', component_name: 'tipo_atividade_continua_extra', enabled: this.$store.getters.has_token},
+      {title: 'Minhas atividades contínuas/extras etc', color: 'white', icon: 'assignment', component_name: 'atividade_continua_extra', enabled: this.$store.getters.has_token}
     ]
     this.user_actions = [
       {title: 'Login', icon: 'account_box', color: 'white', action: 'login', enabled: this.$store.state.token == null},

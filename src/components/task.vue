@@ -106,6 +106,10 @@ export default {
         this.task.responsible = axios.defaults.baseURL + this.scrum_user_list_url + this.responsible_object.id + '/'
       }
     },
+    blurSelectedSprint() {
+      this.task.sprint = axios.defaults.baseURL + this.sprint_list_url + this.sprint_object.id + '/'
+      console.log(this.task.sprint)
+    },
     blurSelectedProject () {
       this.task.project = axios.defaults.baseURL + this.project_list_url + this.project_object.id + '/'
       console.log(this.task.project)
